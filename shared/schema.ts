@@ -53,7 +53,8 @@ export type BitrateFormat = z.infer<typeof bitrateFormatSchema>;
 // Schema for re-encoding request
 export const reEncodeRequestSchema = z.object({
   mediaFileId: z.number(),
-  targetBitrate: bitrateFormatSchema
+  targetBitrate: bitrateFormatSchema,
+  streamType: z.enum(['video', 'audio'])
 });
 
 export type ReEncodeRequest = z.infer<typeof reEncodeRequestSchema>;

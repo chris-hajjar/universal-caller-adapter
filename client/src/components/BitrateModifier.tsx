@@ -41,6 +41,7 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
       const payload = {
         mediaFileId: mediaFile.id,
         targetBitrate: data.targetBitrate,
+        streamType: activeTab, // Pass the active tab to specify which stream type to modify
       };
       
       const result = await apiRequest('POST', '/api/media/reencode', payload);
@@ -130,8 +131,8 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
       ) : (
         <div>
           <p className="text-sm text-gray-600 mb-4">
-            Change the bitrate of your {mediaFile.mediaType === 'video' ? 'video' : 'audio'} file. 
-            Enter a value in format like "5000k" (5 Mbps) or "128k" (128 kbps).
+            Change the bitrate of your {activeTab === 'video' ? 'video' : 'audio'} stream. 
+            Enter a value in format like {activeTab === 'video' ? '"5000k" (5 Mbps)' : '"128k" (128 kbps)'}.
           </p>
           
           <Form {...form}>
@@ -145,12 +146,12 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
                     <FormControl>
                       <Input 
                         {...field} 
-                        placeholder={mediaFile.mediaType === 'video' ? '5000k' : '128k'} 
+                        placeholder={activeTab === 'video' ? '5000k' : '128k'} 
                         disabled={isProcessing}
                       />
                     </FormControl>
                     <p className="text-xs text-gray-500">
-                      {mediaFile.mediaType === 'video' 
+                      {activeTab === 'video' 
                         ? 'For video, try 1000k-8000k (1-8 Mbps)' 
                         : 'For audio, try 96k-320k (96-320 kbps)'}
                     </p>

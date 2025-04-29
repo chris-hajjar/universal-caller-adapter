@@ -271,7 +271,7 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                 </div>
                 
                 {/* Bitrate Modifier Component */}
-                <BitrateModifier mediaFile={mediaFile} />
+                <BitrateModifier mediaFile={mediaFile} activeTab="video" />
               </>
             )}
           </div>
@@ -331,7 +331,7 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                 </div>
                 
                 {/* Bitrate Modifier Component */}
-                <BitrateModifier mediaFile={mediaFile} />
+                <BitrateModifier mediaFile={mediaFile} activeTab="audio" />
               </>
             )}
           </div>

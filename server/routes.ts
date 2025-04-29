@@ -99,6 +99,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Re-encode media file route
+  app.post("/api/media/reencode", async (req, res) => {
+    try {
+      // Validate the request body
+      const validationResult = reEncodeRequestSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      const { mediaFileId, targetBitrate, streamType } = validationResult.data;
+      
+      // Get the media file
+      const mediaFile = await storage.getMediaFile(mediaFileId);
+      if (!mediaFile) {
+        return res.status(404).json({ message: "Media file not found" });
+      }
+      
+      // Re-encode the media file
+      try {
+        const reEncodedResult = await reEncodeMedia(mediaFile.path, targetBitrate, streamType);
+        
+        // Update the media file record with re-encoded information
+        const updatedMediaFile = await storage.updateMediaFileWithReEncoded(
+          mediaFileId,
+          reEncodedResult.path,
+          reEncodedResult.size,
+          targetBitrate
+        );
+        
+        res.status(200).json(updatedMediaFile);
+      } catch (error) {
+        console.error("Error re-encoding media:", error);
+        return res.status(500).json({ message: "Error re-encoding media file", error: String(error) });
+      }
+    } catch (error) {
+      console.error("Error processing re-encoding request:", error);
+      return res.status(500).json({ message: "Error processing re-encoding request", error: String(error) });
+    }
+  });
+  
+  // Download re-encoded media file route
+  app.get("/api/media/:id/download", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const mediaFile = await storage.getMediaFile(id);
+      if (!mediaFile) {
+        return res.status(404).json({ message: "Media file not found" });
+      }
+      
+      if (!mediaFile.isReEncoded || !mediaFile.reEncodedPath) {
+        return res.status(400).json({ message: "Media file has not been re-encoded" });
+      }
+      
+      // Check if the file exists
+      if (!fs.existsSync(mediaFile.reEncodedPath)) {
+        return res.status(404).json({ message: "Re-encoded file not found on server" });
+      }
+      
+      // Set appropriate headers for file download
+      res.setHeader('Content-Disposition', `attachment; filename=${path.basename(mediaFile.reEncodedPath)}`);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      
+      // Stream the file to the client
+      const fileStream = fs.createReadStream(mediaFile.reEncodedPath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Error downloading re-encoded file:", error);
+      return res.status(500).json({ message: "Error downloading re-encoded file", error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -72,7 +72,8 @@ export function startCleanupJob(tempDir: string): NodeJS.Timeout {
  */
 export async function reEncodeMedia(
   inputPath: string, 
-  targetBitrate: BitrateFormat
+  targetBitrate: BitrateFormat,
+  streamType: 'video' | 'audio' = 'video'
 ): Promise<{ path: string; size: number }> {
   return new Promise((resolve, reject) => {
     try {
@@ -83,7 +84,7 @@ export async function reEncodeMedia(
       // Create output path in same directory as input
       const outputPath = path.join(
         path.dirname(inputPath),
-        `${fileName}_reencoded_${targetBitrate}${fileExt}`
+        `${fileName}_reencoded_${streamType}_${targetBitrate}${fileExt}`
       );
       
       // Check if the file exists first
@@ -92,10 +93,20 @@ export async function reEncodeMedia(
       }
       
       // Start re-encoding process
-      const command = ffmpeg(inputPath)
-        .videoBitrate(targetBitrate)  // Set video bitrate
-        .audioBitrate('128k')         // Keep audio at reasonable quality
-        .output(outputPath)
+      let command = ffmpeg(inputPath).output(outputPath);
+      
+      // Set bitrate based on stream type
+      if (streamType === 'video') {
+        command = command
+          .videoBitrate(targetBitrate)   // Set video bitrate
+          .audioBitrate('128k');         // Keep audio at reasonable quality
+      } else {
+        command = command
+          .audioBitrate(targetBitrate);  // Set audio bitrate
+          // Keep video settings unchanged
+      }
+      
+      command
         .on('end', async () => {
           try {
             // Get file size of the re-encoded file
