@@ -1,11 +1,12 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { uploadMiddleware } from "./middlewares/upload";
-import { analyzeMedia } from "./services/mediaService";
+import { analyzeMedia, reEncodeMedia, validateBitrateFormat } from "./services/mediaService";
 import fs from "fs";
 import path from "path";
-import { MediaFileSpecs } from "@shared/schema";
+import { MediaFileSpecs, reEncodeRequestSchema } from "@shared/schema";
+import { z } from "zod";
 
 // We're not importing any Multer types directly
 // Adding a declaration to silence TypeScript errors

@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import { MediaFile } from '@shared/schema';
 import { formatFileSize, formatDuration } from '@/lib/utils/formatters';
 import { useToast } from '@/hooks/use-toast';
+import BitrateModifier from './BitrateModifier';
 
 interface MediaSpecsDisplayProps {
   mediaFile: MediaFile | null;
@@ -225,48 +226,53 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                 <p className="text-gray-500">No video stream found in this file.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500">Codec</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {videoStream.codec_long_name || videoStream.codec_name || 'N/A'}
-                  </p>
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-gray-500">Codec</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {videoStream.codec_long_name || videoStream.codec_name || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Frame Rate</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {videoStream.r_frame_rate 
+                        ? parseFloat(eval(videoStream.r_frame_rate).toFixed(2)) + ' fps'
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Bitrate</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {videoStream.bit_rate 
+                        ? (parseInt(videoStream.bit_rate) / 1000000).toFixed(2) + ' Mbps'
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Pixel Format</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {videoStream.pix_fmt || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Color Space</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {videoStream.color_space || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Aspect Ratio</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {videoStream.display_aspect_ratio || 'N/A'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">Frame Rate</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {videoStream.r_frame_rate 
-                      ? parseFloat(eval(videoStream.r_frame_rate).toFixed(2)) + ' fps'
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Bitrate</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {videoStream.bit_rate 
-                      ? (parseInt(videoStream.bit_rate) / 1000000).toFixed(2) + ' Mbps'
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Pixel Format</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {videoStream.pix_fmt || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Color Space</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {videoStream.color_space || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Aspect Ratio</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {videoStream.display_aspect_ratio || 'N/A'}
-                  </p>
-                </div>
-              </div>
+                
+                {/* Bitrate Modifier Component */}
+                <BitrateModifier mediaFile={mediaFile} />
+              </>
             )}
           </div>
           

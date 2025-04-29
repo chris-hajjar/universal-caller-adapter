@@ -13,6 +13,14 @@ export interface IStorage {
   getMediaFile(id: number): Promise<MediaFile | undefined>;
   getMediaFiles(): Promise<MediaFile[]>;
   createMediaFile(file: InsertMediaFile): Promise<MediaFile>;
+  
+  // Re-encoding operations
+  updateMediaFileWithReEncoded(
+    id: number, 
+    reEncodedPath: string, 
+    reEncodedSize: number,
+    reEncodedBitrate: string
+  ): Promise<MediaFile>;
 }
 
 // Database storage implementation
@@ -53,6 +61,26 @@ export class DatabaseStorage implements IStorage {
       sql`INSERT INTO media_files (filename, path, size, media_type, specs, user_id) 
           VALUES (${insertFile.filename}, ${insertFile.path}, ${insertFile.size}, 
                   ${insertFile.mediaType}, ${JSON.stringify(insertFile.specs)}, ${insertFile.userId || null})
+          RETURNING *`
+    );
+    
+    return result.rows[0] as unknown as MediaFile;
+  }
+  
+  async updateMediaFileWithReEncoded(
+    id: number, 
+    reEncodedPath: string, 
+    reEncodedSize: number,
+    reEncodedBitrate: string
+  ): Promise<MediaFile> {
+    // Use a raw SQL query to update the media file with re-encoded information
+    const result = await db.execute(
+      sql`UPDATE media_files
+          SET re_encoded_path = ${reEncodedPath},
+              re_encoded_size = ${reEncodedSize},
+              re_encoded_bitrate = ${reEncodedBitrate},
+              is_re_encoded = true
+          WHERE id = ${id}
           RETURNING *`
     );
     

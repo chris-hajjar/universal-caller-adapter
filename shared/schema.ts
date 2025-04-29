@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, jsonb, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, primaryKey, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -43,6 +43,21 @@ export interface MediaFileSpecs {
   }>;
 }
 
+// Schema for re-encoding options
+export const bitrateFormatSchema = z.string().regex(/^\d+(k|M)?$/, {
+  message: "Bitrate must be a number followed by 'k' (kbps) or 'M' (Mbps), e.g., '5000k' or '5M'"
+});
+
+export type BitrateFormat = z.infer<typeof bitrateFormatSchema>;
+
+// Schema for re-encoding request
+export const reEncodeRequestSchema = z.object({
+  mediaFileId: z.number(),
+  targetBitrate: bitrateFormatSchema
+});
+
+export type ReEncodeRequest = z.infer<typeof reEncodeRequestSchema>;
+
 // Users schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -60,6 +75,11 @@ export const mediaFiles = pgTable("media_files", {
   specs: jsonb("specs").$type<MediaFileSpecs>().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  // Re-encoded version fields
+  reEncodedPath: text("re_encoded_path"),
+  reEncodedSize: integer("re_encoded_size"),
+  reEncodedBitrate: text("re_encoded_bitrate"),
+  isReEncoded: boolean("is_re_encoded").default(false),
 });
 
 // Define relations
@@ -78,6 +98,10 @@ export const mediaFilesRelations = relations(mediaFiles, ({ one }) => ({
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({
   id: true,
   createdAt: true,
+  reEncodedPath: true,
+  reEncodedSize: true,
+  reEncodedBitrate: true,
+  isReEncoded: true,
 });
 
 export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;

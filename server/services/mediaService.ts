@@ -1,7 +1,8 @@
 import ffmpeg from "fluent-ffmpeg";
 import { promises as fs } from "fs";
+import * as fsSync from "fs";
 import path from "path";
-import { MediaFileSpecs } from "@shared/schema";
+import { MediaFileSpecs, BitrateFormat } from "@shared/schema";
 
 /**
  * Analyzes a media file using FFmpeg and returns detailed specifications
@@ -61,4 +62,71 @@ export function startCleanupJob(tempDir: string): NodeJS.Timeout {
       console.error("Error in cleanup job:", err);
     });
   }, 3600000); // Run every hour
+}
+
+/**
+ * Re-encodes a media file with a new bitrate
+ * @param inputPath Path to the input media file
+ * @param targetBitrate Target bitrate in format like '5000k' or '5M'
+ * @returns Promise resolving to the path of the re-encoded file
+ */
+export async function reEncodeMedia(
+  inputPath: string, 
+  targetBitrate: BitrateFormat
+): Promise<{ path: string; size: number }> {
+  return new Promise((resolve, reject) => {
+    try {
+      // Get file extension from original file
+      const fileExt = path.extname(inputPath);
+      const fileName = path.basename(inputPath, fileExt);
+      
+      // Create output path in same directory as input
+      const outputPath = path.join(
+        path.dirname(inputPath),
+        `${fileName}_reencoded_${targetBitrate}${fileExt}`
+      );
+      
+      // Check if the file exists first
+      if (!fsSync.existsSync(inputPath)) {
+        return reject(new Error(`Input file not found: ${inputPath}`));
+      }
+      
+      // Start re-encoding process
+      const command = ffmpeg(inputPath)
+        .videoBitrate(targetBitrate)  // Set video bitrate
+        .audioBitrate('128k')         // Keep audio at reasonable quality
+        .output(outputPath)
+        .on('end', async () => {
+          try {
+            // Get file size of the re-encoded file
+            const stats = await fs.stat(outputPath);
+            
+            resolve({
+              path: outputPath,
+              size: stats.size
+            });
+          } catch (error) {
+            reject(error);
+          }
+        })
+        .on('error', (err) => {
+          reject(err);
+        });
+      
+      // Start the encoding process
+      command.run();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Validates a bitrate string format
+ * @param bitrate Bitrate string (e.g., "5000k", "5M")
+ * @returns Boolean indicating if the format is valid
+ */
+export function validateBitrateFormat(bitrate: string): boolean {
+  const bitrateRegex = /^\d+(k|M)?$/;
+  return bitrateRegex.test(bitrate);
 }
