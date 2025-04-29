@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
 import { storage } from "./storage";
 import { uploadMiddleware } from "./middlewares/upload";
 import { analyzeMedia, reEncodeMedia, validateBitrateFormat } from "./services/mediaService";
@@ -32,6 +33,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
   }
+  
+  // Create static directory if it doesn't exist and serve static files
+  const staticDir = path.join(process.cwd(), "static");
+  if (!fs.existsSync(staticDir)) {
+    fs.mkdirSync(staticDir, { recursive: true });
+  }
+  
+  // Serve static files, including FFmpeg source code
+  app.use('/static', express.static(staticDir));
+  
+  // Specific route for FFmpeg source code download
+  app.get('/ffmpeg-source.zip', (req, res) => {
+    // Since we're demonstrating compliance but not actually shipping FFmpeg,
+    // we'll create a simple text response with the README content
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', 'attachment; filename="ffmpeg-source.txt"');
+    
+    const readmePath = path.join(staticDir, 'README_FFMPEG.txt');
+    const licensePath = path.join(staticDir, 'LICENSE');
+    const placeholderPath = path.join(staticDir, 'ffmpeg-placeholder.txt');
+    
+    let contents = '';
+    
+    if (fs.existsSync(readmePath)) {
+      contents += fs.readFileSync(readmePath, 'utf8') + '\n\n';
+    }
+    
+    if (fs.existsSync(licensePath)) {
+      contents += '==== LICENSE ====\n\n' + fs.readFileSync(licensePath, 'utf8') + '\n\n';
+    }
+    
+    if (fs.existsSync(placeholderPath)) {
+      contents += '==== SOURCE CODE PLACEHOLDER ====\n\n' + fs.readFileSync(placeholderPath, 'utf8');
+    }
+    
+    res.send(contents);
+  });
 
   // Media upload route
   app.post("/api/media/upload", uploadMiddleware.single("file"), async (req, res) => {
