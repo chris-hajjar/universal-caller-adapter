@@ -1,5 +1,6 @@
 import { FC } from "react";
 import { Link } from "wouter";
+import AboutDialog from "./AboutDialog";
 
 const Header: FC = () => {
   return (
@@ -25,14 +26,17 @@ const Header: FC = () => {
               <h1 className="text-xl font-semibold text-gray-800">Media Specs Extractor</h1>
             </div>
           </Link>
-          <a
-            href="https://github.com/ffmpeg/ffmpeg"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
-            Documentation <span className="text-xs">↗</span>
-          </a>
+          <div className="flex items-center space-x-4">
+            <AboutDialog />
+            <a
+              href="https://github.com/ffmpeg/ffmpeg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Documentation <span className="text-xs">↗</span>
+            </a>
+          </div>
         </div>
       </div>
     </header>
