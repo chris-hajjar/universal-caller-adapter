@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,13 @@ import { formatFileSize } from '@/lib/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface BitrateModifierProps {
   mediaFile: MediaFile;
@@ -25,7 +32,31 @@ type FormValues = z.infer<typeof formSchema>;
 const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
+  
+  // Simulated progress effect when processing
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isProcessing) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          // Slowly increase up to 95%, the final jump will happen when complete
+          const increment = Math.random() * 10;
+          const newProgress = Math.min(prev + increment, 95);
+          return newProgress;
+        });
+      }, 1000);
+    } else if (isComplete) {
+      setProgress(100);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isProcessing, isComplete]);
 
   // Set up the form
   const form = useForm<FormValues>({
@@ -108,16 +139,40 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
               <div>
                 <span className="text-green-600">New Size:</span> {formatFileSize(mediaFile.reEncodedSize || 0)}
               </div>
-              <div>
-                <span className="text-green-600">New Bitrate:</span> {mediaFile.reEncodedBitrate}
-              </div>
-              <div>
-                <span className="text-green-600">Reduction:</span> {
-                  mediaFile.reEncodedSize 
-                    ? `${((1 - mediaFile.reEncodedSize / mediaFile.size) * 100).toFixed(1)}%` 
-                    : 'N/A'
-                }
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-help">
+                      <span className="text-green-600">New Bitrate:</span> {mediaFile.reEncodedBitrate}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      Bitrate is the amount of data processed per unit of time. Higher bitrates generally 
+                      mean better quality but larger file sizes.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-help">
+                      <span className="text-green-600">Reduction:</span> {
+                        mediaFile.reEncodedSize 
+                          ? `${((1 - mediaFile.reEncodedSize / mediaFile.size) * 100).toFixed(1)}%` 
+                          : 'N/A'
+                      }
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      File size reduction achieved by re-encoding. A higher percentage means 
+                      more space saved compared to the original file.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           
@@ -156,7 +211,23 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
                 name="targetBitrate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Bitrate</FormLabel>
+                    <div className="flex items-center space-x-2">
+                      <FormLabel>Target Bitrate</FormLabel>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-help rounded-full bg-slate-100 p-1 w-4 h-4 inline-flex items-center justify-center text-slate-500 text-xs">?</div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">
+                              {activeTab === 'video' 
+                                ? 'Video bitrate affects visual quality and file size. Higher values (e.g., 5000k) give better quality but larger files.' 
+                                : 'Audio bitrate affects sound quality and file size. Common values: 128k for standard quality, 320k for high quality.'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -206,6 +277,16 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
               </Button>
             </form>
           </Form>
+          
+          {isProcessing && (
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Re-encoding in progress...</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
                 
           {isComplete && (
             <div className="mt-4 space-y-3">
