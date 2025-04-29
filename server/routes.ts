@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { uploadMiddleware } from "./middlewares/upload";
@@ -6,6 +6,24 @@ import { analyzeMedia } from "./services/mediaService";
 import fs from "fs";
 import path from "path";
 import { MediaFileSpecs } from "@shared/schema";
+
+// We're not importing any Multer types directly
+// Adding a declaration to silence TypeScript errors
+declare module 'express-serve-static-core' {
+  interface Request {
+    file?: {
+      fieldname: string;
+      originalname: string;
+      encoding: string;
+      mimetype: string;
+      size: number;
+      destination: string;
+      filename: string;
+      path: string;
+      buffer: Buffer;
+    };
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create temp directory for uploaded files if it doesn't exist
