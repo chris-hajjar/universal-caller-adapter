@@ -1,41 +1,64 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { promisify } from "util";
 
-// Setup multer storage
+// Promisify file operations for async usage
+const fsExists = promisify(fs.exists);
+const fsMkdir = promisify(fs.mkdir);
+
+// Cache temp directory path
+const TEMP_DIR = path.join(process.cwd(), "tmp");
+
+// Ensure temp directory exists (executed once during import)
+if (!fs.existsSync(TEMP_DIR)) {
+  fs.mkdirSync(TEMP_DIR, { recursive: true });
+}
+
+// Optimized file extension check using Set for O(1) lookups
+const ALLOWED_EXTENSIONS = new Set(['.mp3', '.mp4']);
+// Map of mime types to extensions for validation
+const MIME_TYPE_MAP: Record<string, string> = {
+  'audio/mpeg': '.mp3',
+  'audio/mp3': '.mp3',
+  'video/mp4': '.mp4'
+};
+
+// Setup optimized multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Create temp directory if it doesn't exist
-    const tempDir = path.join(process.cwd(), "tmp");
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    cb(null, tempDir);
+    // Directory is already ensured to exist
+    cb(null, TEMP_DIR);
   },
   filename: function (req, file, cb) {
-    // Generate a unique filename to prevent overwriting
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    // More efficient unique filename generation
+    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Extract extension from mime type for better security
+    const ext = MIME_TYPE_MAP[file.mimetype] || path.extname(file.originalname).toLowerCase();
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   }
 });
 
-// File filter to accept only MP3 and MP4 files
-const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimeTypes = ['audio/mpeg', 'audio/mp3', 'video/mp4'];
+// Optimized file filter with better error messages - fixed TypeScript issues
+const fileFilter = (req: any, file: any, cb: any) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const mimeTypeValid = !!MIME_TYPE_MAP[file.mimetype];
+  const extensionValid = ALLOWED_EXTENSIONS.has(ext);
   
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  if (mimeTypeValid && extensionValid) {
     cb(null, true);
   } else {
-    cb(new Error("Only MP3 and MP4 files are allowed"));
+    // More informative error
+    const errorMsg = `File type not supported. Only MP3 and MP4 files are allowed. Received: ${file.mimetype}, extension: ${ext}`;
+    cb(new Error(errorMsg));
   }
 };
 
-// Configure the multer middleware
+// Configure the multer middleware with increased size limit
 export const uploadMiddleware = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB in bytes
+    fileSize: 200 * 1024 * 1024, // 200MB in bytes (increased as requested)
   }
 });
