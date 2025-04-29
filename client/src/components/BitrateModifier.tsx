@@ -275,6 +275,10 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
                   </>
                 )}
               </Button>
+              
+              <div className="mt-2 text-[9px] text-gray-400 text-justify">
+                By choosing to modify the bitrate of any uploaded file, you acknowledge that you are solely responsible for ensuring that the resulting file complies with all applicable licensing requirements, patent laws, and third-party rights. This service facilitates bitrate adjustments but does not guarantee compliance with codec licensing obligations (including but not limited to H.264, AAC, and MPEG standards). Users are responsible for obtaining any necessary licenses or permissions related to the use and distribution of re-encoded files.
+              </div>
             </form>
           </Form>
           
