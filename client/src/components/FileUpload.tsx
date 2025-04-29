@@ -192,9 +192,9 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-            <path d="M12 12v9" />
-            <path d="m16 16-4-4-4 4" />
+            <path key="cloud-path" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+            <path key="vertical-path" d="M12 12v9" />
+            <path key="arrow-path" d="m16 16-4-4-4 4" />
           </svg>
           <div>
             <p className="text-base font-medium text-gray-700">
@@ -256,11 +256,11 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
                   strokeLinejoin="round"
                 >
                   {file.mediaType === 'audio' ? (
-                    <path d="M9 18V5l12-2v13" />
+                    <path key="audio-icon" d="M9 18V5l12-2v13" />
                   ) : (
                     <>
-                      <path d="m22 8-6-4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10l6-4V8Z" />
-                      <circle cx="9" cy="12" r="1" />
+                      <path key="video-icon-path" d="m22 8-6-4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10l6-4V8Z" />
+                      <circle key="video-icon-circle" cx="9" cy="12" r="1" />
                     </>
                   )}
                 </svg>
@@ -287,8 +287,8 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    <rect key="copy-rect" width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                    <path key="copy-path" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                   </svg>
                 </button>
                 <button
@@ -306,8 +306,8 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
+                    <path key="x-path-1" d="M18 6 6 18" />
+                    <path key="x-path-2" d="m6 6 12 12" />
                   </svg>
                 </button>
               </div>
@@ -328,7 +328,7 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path key="shield-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
           Files are processed securely and not stored permanently
         </div>
