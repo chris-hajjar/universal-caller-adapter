@@ -25,16 +25,29 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
- * Format a duration in seconds to HH:MM:SS format
+ * Format a duration in seconds to HH:MM:SS format with safety checks
  */
 export function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  
-  const pad = (num: number) => num.toString().padStart(2, '0');
-  
-  return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+  try {
+    // Handle non-numeric or invalid inputs
+    if (typeof seconds !== 'number' || isNaN(seconds) || !isFinite(seconds)) {
+      return '00:00:00';
+    }
+    
+    // Ensure seconds is not negative
+    seconds = Math.max(0, seconds);
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    const pad = (num: number) => num.toString().padStart(2, '0');
+    
+    return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+  } catch (error) {
+    console.error('Error formatting duration:', error);
+    return '00:00:00';
+  }
 }
 
 /**

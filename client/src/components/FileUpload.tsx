@@ -9,7 +9,7 @@ interface FileUploadProps {
   onFileUploaded: (file: MediaFile) => void;
 }
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const ALLOWED_FILE_TYPES = ['audio/mpeg', 'audio/mp3', 'video/mp4'];
 
 const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
@@ -38,7 +38,7 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
     if (file.size > MAX_FILE_SIZE) {
       toast({
         title: 'File too large',
-        description: 'File size should be less than 100MB.',
+        description: 'File size should be less than 200MB.',
         variant: 'destructive',
       });
       return;
@@ -205,7 +205,7 @@ const FileUpload: FC<FileUploadProps> = ({ onFileUploaded }) => {
             </p>
           </div>
           <p className="text-xs text-gray-400">
-            Supports MP3, MP4 files up to 100MB
+            Supports MP3, MP4 files up to 200MB
           </p>
         </div>
         <input {...getInputProps()} />

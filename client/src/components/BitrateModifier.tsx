@@ -53,10 +53,11 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
           if (response.ok) {
             const data = await response.json();
             if (data?.status === 'success') {
-              setProgress(data.data?.progress || 0);
+              const currentProgress = Number(data.data?.progress || 0);
+              setProgress(currentProgress);
               
               // If progress is 100%, encoding is complete
-              if (data.data?.progress === 100) {
+              if (currentProgress >= 100) {
                 checkReEncodingStatus();
               }
             }
