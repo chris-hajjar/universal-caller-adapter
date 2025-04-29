@@ -3,6 +3,12 @@ import { MediaFile } from '@shared/schema';
 import { formatFileSize, formatDuration } from '@/lib/utils/formatters';
 import { useToast } from '@/hooks/use-toast';
 import BitrateModifier from './BitrateModifier';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface MediaSpecsDisplayProps {
   mediaFile: MediaFile | null;
@@ -146,20 +152,79 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Summary</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Type</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                      Type
+                      <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      The file format type. MP3 is an audio-only format, while MP4 is a container format 
+                      that can include video, audio, subtitles, and other data.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-sm font-medium text-gray-800">{fileType}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">File Size</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                      File Size
+                      <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      The total size of the media file in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB).
+                      File size depends on duration, resolution, and encoding quality.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-sm font-medium text-gray-800">{formatFileSize(mediaFile.size)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Duration</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                      Duration
+                      <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      The total playback time of the media file, displayed in hours:minutes:seconds format.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-sm font-medium text-gray-800">{duration}</p>
             </div>
             {videoStream && (
               <div>
-                <p className="text-xs text-gray-500">Resolution</p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                        Resolution
+                        <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs max-w-xs">
+                        The number of pixels in each dimension (width × height). Common resolutions include 
+                        1920×1080 (Full HD), 3840×2160 (4K), and 7680×4320 (8K).
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p className="text-sm font-medium text-gray-800">{resolution}</p>
               </div>
             )}
@@ -229,13 +294,43 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
               <>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <p className="text-xs text-gray-500">Codec</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Codec
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            A codec is software or hardware that compresses and decompresses digital video. 
+                            Common video codecs include H.264, H.265 (HEVC), VP9, and AV1.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {videoStream.codec_long_name || videoStream.codec_name || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Frame Rate</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Frame Rate
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Frame rate is the number of images displayed per second in a video. 
+                            Higher frame rates (e.g., 60fps) create smoother motion. Standard film typically uses 24fps.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {videoStream.r_frame_rate 
                         ? parseFloat(eval(videoStream.r_frame_rate).toFixed(2)) + ' fps'
@@ -243,7 +338,22 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Bitrate</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Bitrate
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Bitrate is the amount of data processed per second. Higher bitrates usually mean 
+                            better quality video but larger file sizes. Measured in Mbps (megabits per second).
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {videoStream.bit_rate 
                         ? (parseInt(videoStream.bit_rate) / 1000000).toFixed(2) + ' Mbps'
@@ -251,19 +361,64 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Pixel Format</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Pixel Format
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Pixel format determines how color and transparency information is stored for each pixel.
+                            Common formats include RGB, YUV, and their variants with different bit depths and subsampling.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {videoStream.pix_fmt || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Color Space</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Color Space
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Color space defines the range of colors in a video. Different color spaces (BT.709, BT.2020, etc.) 
+                            support different color ranges and are used for different display technologies.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {videoStream.color_space || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Aspect Ratio</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Aspect Ratio
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Aspect ratio is the proportional relationship between a video's width and height.
+                            Common aspect ratios include 16:9 (widescreen), 4:3 (standard), and 21:9 (ultrawide).
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {videoStream.display_aspect_ratio || 'N/A'}
                     </p>
@@ -289,19 +444,64 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
               <>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <p className="text-xs text-gray-500">Codec</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Codec
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            An audio codec compresses and decompresses digital audio. Common audio codecs include 
+                            MP3, AAC, FLAC, and Opus. Different codecs offer different trade-offs between quality and file size.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {audioStream.codec_long_name || audioStream.codec_name || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Sample Rate</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Sample Rate
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Sample rate is the number of audio samples taken per second, measured in Hertz (Hz).
+                            Common rates are 44.1kHz (CD quality), 48kHz (standard for digital video), and 96kHz (high-resolution audio).
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {audioStream.sample_rate ? `${audioStream.sample_rate} Hz` : 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Channels</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Channels
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Audio channels determine how many independent audio signals are used. 
+                            Mono (1) uses one channel, stereo (2) uses two, while surround sound may use 5.1, 7.1, or more channels.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {audioStream.channels 
                         ? `${audioStream.channels} (${audioStream.channels === 1 ? 'Mono' : 'Stereo'})`
@@ -309,7 +509,22 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Bitrate</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Bitrate
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Audio bitrate is the amount of data processed per second, measured in kilobits per second (kbps).
+                            Higher bitrates mean better quality audio. Common values: 128kbps (standard), 320kbps (high quality).
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {audioStream.bit_rate 
                         ? (parseInt(audioStream.bit_rate) / 1000) + ' kbps'
@@ -317,13 +532,43 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Channel Layout</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Channel Layout
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            Channel layout describes how audio channels are arranged (e.g., "stereo," "5.1"). 
+                            This determines the spatial positioning of sound in playback systems.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {audioStream.channel_layout || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Language</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-500 cursor-help inline-flex items-center">
+                            Language
+                            <span className="ml-1 inline-block w-3.5 h-3.5 rounded-full bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center">?</span>
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-xs">
+                            The language tag indicates the spoken language in the audio track.
+                            This is important for multi-language content and accessibility.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <p className="text-sm font-medium text-gray-800">
                       {audioStream.tags?.language || 'N/A'}
                     </p>
