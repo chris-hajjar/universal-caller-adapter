@@ -93,7 +93,15 @@ export async function reEncodeMedia(
       }
       
       // Start re-encoding process
-      let command = ffmpeg(inputPath).output(outputPath);
+      let command = ffmpeg(inputPath)
+        .output(outputPath)
+        .outputOptions('-y') // Overwrite output files without asking
+        .on('start', (commandLine) => {
+          console.log('FFmpeg process started with command:', commandLine);
+        })
+        .on('progress', (progress) => {
+          console.log('Re-encoding progress:', progress);
+        });
       
       // Set bitrate based on stream type
       if (streamType === 'video') {
@@ -109,6 +117,7 @@ export async function reEncodeMedia(
       command
         .on('end', async () => {
           try {
+            console.log('FFmpeg process completed successfully');
             // Get file size of the re-encoded file
             const stats = await fs.stat(outputPath);
             
@@ -117,15 +126,22 @@ export async function reEncodeMedia(
               size: stats.size
             });
           } catch (error) {
+            console.error('Error getting re-encoded file stats:', error);
             reject(error);
           }
         })
         .on('error', (err) => {
+          console.error('FFmpeg process error:', err);
           reject(err);
         });
       
-      // Start the encoding process
-      command.run();
+      try {
+        // Start the encoding process
+        command.run();
+      } catch (execError) {
+        console.error('Error executing FFmpeg command:', execError);
+        reject(execError);
+      }
     } catch (error) {
       reject(error);
     }
