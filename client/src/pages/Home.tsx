@@ -3,7 +3,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FileUpload from '@/components/FileUpload';
 import MediaSpecsDisplay from '@/components/MediaSpecsDisplay';
-import APISection from '@/components/APISection';
 import { MediaFile } from '@shared/schema';
 
 const Home: FC = () => {
@@ -39,8 +38,6 @@ const Home: FC = () => {
               
               <FileUpload onFileUploaded={handleFileUploaded} />
             </div>
-
-            <APISection />
           </div>
 
           <div className="col-span-1">
