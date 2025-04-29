@@ -37,16 +37,12 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile }) => {
   const onSubmit = async (data: FormValues) => {
     setIsProcessing(true);
     try {
-      const result = await apiRequest('/api/media/reencode', {
-        method: 'POST',
-        body: JSON.stringify({
-          mediaFileId: mediaFile.id,
-          targetBitrate: data.targetBitrate,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const payload = {
+        mediaFileId: mediaFile.id,
+        targetBitrate: data.targetBitrate,
+      };
+      
+      const result = await apiRequest('POST', '/api/media/reencode', payload);
 
       // Update cached media file data
       queryClient.invalidateQueries({ queryKey: ['/api/media', mediaFile.id] });

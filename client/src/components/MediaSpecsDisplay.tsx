@@ -286,48 +286,53 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
                 <p className="text-gray-500">No audio stream found in this file.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500">Codec</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {audioStream.codec_long_name || audioStream.codec_name || 'N/A'}
-                  </p>
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-gray-500">Codec</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {audioStream.codec_long_name || audioStream.codec_name || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Sample Rate</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {audioStream.sample_rate ? `${audioStream.sample_rate} Hz` : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Channels</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {audioStream.channels 
+                        ? `${audioStream.channels} (${audioStream.channels === 1 ? 'Mono' : 'Stereo'})`
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Bitrate</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {audioStream.bit_rate 
+                        ? (parseInt(audioStream.bit_rate) / 1000) + ' kbps'
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Channel Layout</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {audioStream.channel_layout || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Language</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {audioStream.tags?.language || 'N/A'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">Sample Rate</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {audioStream.sample_rate ? `${audioStream.sample_rate} Hz` : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Channels</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {audioStream.channels 
-                      ? `${audioStream.channels} (${audioStream.channels === 1 ? 'Mono' : 'Stereo'})`
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Bitrate</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {audioStream.bit_rate 
-                      ? (parseInt(audioStream.bit_rate) / 1000) + ' kbps'
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Channel Layout</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {audioStream.channel_layout || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Language</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {audioStream.tags?.language || 'N/A'}
-                  </p>
-                </div>
-              </div>
+                
+                {/* Bitrate Modifier Component */}
+                <BitrateModifier mediaFile={mediaFile} />
+              </>
             )}
           </div>
           
