@@ -52,11 +52,11 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
           const response = await fetch(`/api/media/progress/${jobId}`);
           if (response.ok) {
             const data = await response.json();
-            if (data.status === 'success') {
-              setProgress(data.data.progress);
+            if (data?.status === 'success') {
+              setProgress(data.data?.progress || 0);
               
               // If progress is 100%, encoding is complete
-              if (data.data.progress >= 100) {
+              if (data.data?.progress === 100) {
                 checkReEncodingStatus();
               }
             }
@@ -128,8 +128,14 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
       const result = await apiRequest('POST', '/api/media/reencode', payload);
 
       // The API now returns a 202 status with a jobId
-      if (result.status === 'processing' && result.data?.jobId) {
-        setJobId(result.data.jobId);
+      if (result && typeof result === 'object' && 'status' in result && 
+          result.status === 'processing' && 
+          'data' in result && 
+          result.data && 
+          typeof result.data === 'object' && 
+          'jobId' in result.data) {
+        
+        setJobId(result.data.jobId as string);
         
         toast({
           title: 'Re-encoding Started',
@@ -172,7 +178,13 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
       if (statusResponse.ok) {
         const statusData = await statusResponse.json();
         
-        if (!statusData.data.fileExists) {
+        if (statusData && 
+            typeof statusData === 'object' && 
+            'data' in statusData && 
+            statusData.data && 
+            typeof statusData.data === 'object' && 
+            'fileExists' in statusData.data && 
+            !statusData.data.fileExists) {
           throw new Error('Re-encoded file is not available. It may have been deleted.');
         }
       }
@@ -183,7 +195,14 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
       // Create a link and trigger download
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `${mediaFile.filename.split('.')[0]}_reencoded_${mediaFile.reEncodedBitrate}${mediaFile.filename.substring(mediaFile.filename.lastIndexOf('.'))}`;
+      
+      // Create safer filename
+      const baseFilename = mediaFile.filename.split('.')[0] || 'file';
+      const extension = mediaFile.filename.lastIndexOf('.') > 0 
+        ? mediaFile.filename.substring(mediaFile.filename.lastIndexOf('.')) 
+        : '.mp4';
+      
+      a.download = `${baseFilename}_reencoded_${mediaFile.reEncodedBitrate || 'modified'}${extension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
