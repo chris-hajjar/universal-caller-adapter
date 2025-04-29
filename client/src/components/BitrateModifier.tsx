@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useRef } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,80 +33,30 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [jobId, setJobId] = useState<string | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   
-  // Real progress tracking from server
+  // Simulated progress effect when processing
   useEffect(() => {
-    // Clean up any existing interval
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
+    let interval: NodeJS.Timeout;
     
-    if (isProcessing && jobId) {
-      // Start a new interval to check encoding progress
-      progressIntervalRef.current = setInterval(async () => {
-        try {
-          const response = await fetch(`/api/media/progress/${jobId}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data?.status === 'success') {
-              const currentProgress = Number(data.data?.progress || 0);
-              setProgress(currentProgress);
-              
-              // If progress is 100%, encoding is complete
-              if (currentProgress >= 100) {
-                checkReEncodingStatus();
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching encoding progress:', error);
-        }
+    if (isProcessing) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          // Slowly increase up to 95%, the final jump will happen when complete
+          const increment = Math.random() * 10;
+          const newProgress = Math.min(prev + increment, 95);
+          return newProgress;
+        });
       }, 1000);
     } else if (isComplete) {
       setProgress(100);
     }
     
-    // Cleanup function
     return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      if (interval) clearInterval(interval);
     };
-  }, [isProcessing, isComplete, jobId]);
-
-  // Poll for re-encoding status
-  const checkReEncodingStatus = async () => {
-    try {
-      const response = await fetch(`/api/media/${mediaFile.id}/status`);
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.status === 'success' && data.data.isReEncoded) {
-          // Re-encoding is complete
-          clearInterval(progressIntervalRef.current!);
-          progressIntervalRef.current = null;
-          
-          // Update UI and cached data
-          setIsProcessing(false);
-          setIsComplete(true);
-          
-          // Update cached media file data
-          queryClient.invalidateQueries({ queryKey: ['/api/media', mediaFile.id] });
-          
-          toast({
-            title: 'Re-encoding Complete',
-            description: 'Your media file has been successfully re-encoded.',
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error checking re-encoding status:', error);
-    }
-  };
+  }, [isProcessing, isComplete]);
 
   // Set up the form
   const form = useForm<FormValues>({
@@ -118,7 +68,6 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
 
   const onSubmit = async (data: FormValues) => {
     setIsProcessing(true);
-    setProgress(0);
     try {
       const payload = {
         mediaFileId: mediaFile.id,
@@ -128,37 +77,16 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
       
       const result = await apiRequest('POST', '/api/media/reencode', payload);
 
-      // The API now returns a 202 status with a jobId
-      if (result && typeof result === 'object' && 'status' in result && 
-          result.status === 'processing' && 
-          'data' in result && 
-          result.data && 
-          typeof result.data === 'object' && 
-          'jobId' in result.data) {
-        
-        setJobId(result.data.jobId as string);
-        
-        toast({
-          title: 'Re-encoding Started',
-          description: 'Your media file is being re-encoded. You can track the progress.',
-        });
-      } else {
-        // Handle immediate completion (unlikely with large files)
-        setIsComplete(true);
-        setIsProcessing(false);
-        
-        // Update cached media file data
-        queryClient.invalidateQueries({ queryKey: ['/api/media', mediaFile.id] });
-        
-        toast({
-          title: 'Re-encoding Complete',
-          description: 'Your media file has been successfully re-encoded.',
-        });
-      }
-    } catch (error) {
-      setIsProcessing(false);
-      setJobId(null);
+      // Update cached media file data
+      queryClient.invalidateQueries({ queryKey: ['/api/media', mediaFile.id] });
       
+      setIsComplete(true);
+      toast({
+        title: 'Re-encoding Complete',
+        description: 'Your media file has been successfully re-encoded.',
+      });
+      
+    } catch (error) {
       let errorMessage = 'Failed to re-encode the media file';
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -169,58 +97,28 @@ const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => 
         description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleDownload = async () => {
     try {
-      // First check if the file is available for download
-      const statusResponse = await fetch(`/api/media/${mediaFile.id}/status`);
-      if (statusResponse.ok) {
-        const statusData = await statusResponse.json();
-        
-        if (statusData && 
-            typeof statusData === 'object' && 
-            'data' in statusData && 
-            statusData.data && 
-            typeof statusData.data === 'object' && 
-            'fileExists' in statusData.data && 
-            !statusData.data.fileExists) {
-          throw new Error('Re-encoded file is not available. It may have been deleted.');
-        }
-      }
-      
       // Create a download URL from the API endpoint
       const downloadUrl = `/api/media/${mediaFile.id}/download`;
       
       // Create a link and trigger download
       const a = document.createElement('a');
       a.href = downloadUrl;
-      
-      // Create safer filename
-      const baseFilename = mediaFile.filename.split('.')[0] || 'file';
-      const extension = mediaFile.filename.lastIndexOf('.') > 0 
-        ? mediaFile.filename.substring(mediaFile.filename.lastIndexOf('.')) 
-        : '.mp4';
-      
-      a.download = `${baseFilename}_reencoded_${mediaFile.reEncodedBitrate || 'modified'}${extension}`;
+      a.download = `${mediaFile.filename.split('.')[0]}_reencoded${mediaFile.filename.substring(mediaFile.filename.lastIndexOf('.'))}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       
-      toast({
-        title: 'Download Started',
-        description: 'Your re-encoded file is being downloaded.',
-      });
     } catch (error) {
-      let errorMessage = 'Failed to download the re-encoded file';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
       toast({
         title: 'Download Failed',
-        description: errorMessage,
+        description: 'Failed to download the re-encoded file.',
         variant: 'destructive',
       });
     }

@@ -133,15 +133,14 @@ const MediaSpecsDisplay: FC<MediaSpecsDisplayProps> = ({
     );
   }
 
-  // Extract specifications with proper null/undefined checks
-  const specs = mediaFile.specs || {}; // Ensure specs is at least an empty object
+  // Extract specifications
+  const specs = mediaFile.specs;
   const format = specs.format || {};
-  const streams = specs.streams || [];
-  const videoStream = streams.find(s => s.codec_type === 'video');
-  const audioStream = streams.find(s => s.codec_type === 'audio');
+  const videoStream = specs.streams?.find(s => s.codec_type === 'video');
+  const audioStream = specs.streams?.find(s => s.codec_type === 'audio');
   
   // Calculate additional properties
-  const resolution = videoStream ? `${videoStream.width || '?'} × ${videoStream.height || '?'}` : 'N/A';
+  const resolution = videoStream ? `${videoStream.width} × ${videoStream.height}` : 'N/A';
   const duration = format.duration ? formatDuration(parseFloat(format.duration)) : 'N/A';
   const fileType = mediaFile.mediaType === 'audio' ? 'MP3 Audio' : 'MP4 Video';
 
