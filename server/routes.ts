@@ -44,6 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           size: fileSizeInBytes,
           mediaType,
           specs: mediaSpecs as MediaFileSpecs,
+          userId: null, // We're not associating with a user for now
         });
 
         res.status(200).json(mediaFile);

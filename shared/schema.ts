@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Schema for media file specifications (FFmpeg output)
 export interface MediaFileSpecs {
@@ -42,7 +43,14 @@ export interface MediaFileSpecs {
   }>;
 }
 
-// Database schema
+// Users schema
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+// Media files schema
 export const mediaFiles = pgTable("media_files", {
   id: serial("id").primaryKey(),
   filename: text("filename").notNull(),
@@ -51,7 +59,20 @@ export const mediaFiles = pgTable("media_files", {
   mediaType: text("media_type").notNull(), // 'audio' or 'video'
   specs: jsonb("specs").$type<MediaFileSpecs>().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
 });
+
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  mediaFiles: many(mediaFiles),
+}));
+
+export const mediaFilesRelations = relations(mediaFiles, ({ one }) => ({
+  user: one(users, {
+    fields: [mediaFiles.userId],
+    references: [users.id],
+  }),
+}));
 
 // Zod schema for creating a media file
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({
@@ -62,13 +83,7 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({
 export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
 export type MediaFile = typeof mediaFiles.$inferSelect;
 
-// Users schema (keeping from the original template)
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
+// Zod schema for creating a user
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,

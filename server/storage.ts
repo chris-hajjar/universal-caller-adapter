@@ -1,4 +1,6 @@
 import { users, type User, type InsertUser, mediaFiles, type MediaFile, type InsertMediaFile } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -13,59 +15,52 @@ export interface IStorage {
   createMediaFile(file: InsertMediaFile): Promise<MediaFile>;
 }
 
-// In-memory storage implementation
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private mediaFiles: Map<number, MediaFile>;
-  private currentUserId: number;
-  private currentMediaFileId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.mediaFiles = new Map();
-    this.currentUserId = 1;
-    this.currentMediaFileId = 1;
-  }
-
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   // Media file operations
   async getMediaFile(id: number): Promise<MediaFile | undefined> {
-    return this.mediaFiles.get(id);
+    const [mediaFile] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    return mediaFile || undefined;
   }
 
   async getMediaFiles(): Promise<MediaFile[]> {
-    return Array.from(this.mediaFiles.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return await db.select().from(mediaFiles).orderBy(desc(mediaFiles.createdAt));
   }
 
   async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
-    const id = this.currentMediaFileId++;
-    const mediaFile: MediaFile = { 
-      ...insertFile, 
-      id, 
-      createdAt: new Date().toISOString() 
-    };
-    this.mediaFiles.set(id, mediaFile);
+    const [mediaFile] = await db
+      .insert(mediaFiles)
+      .values([{
+        filename: insertFile.filename,
+        path: insertFile.path,
+        size: insertFile.size,
+        mediaType: insertFile.mediaType,
+        specs: insertFile.specs,
+        userId: insertFile.userId
+      }])
+      .returning();
     return mediaFile;
   }
 }
 
 // Export a singleton instance of the storage
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
