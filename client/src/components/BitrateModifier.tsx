@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 
 interface BitrateModifierProps {
   mediaFile: MediaFile;
+  activeTab: 'video' | 'audio';
 }
 
 // Form schema
@@ -21,7 +22,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile }) => {
+const BitrateModifier: FC<BitrateModifierProps> = ({ mediaFile, activeTab }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
