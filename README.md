@@ -69,7 +69,9 @@ universal-caller-adapter/
 │       ├── rag_search.py         # Sample tool: RAG search
 │       └── diagnostics.py        # Sample tool: diagnostics
 ├── main.py                        # FastAPI application
-├── demo.py                        # Demo script
+├── run_demo.py                    # Consolidated demo runner (starts server automatically)
+├── simple_demo.py                 # Educational demo with explanations
+├── demo.py                        # Comprehensive demo script
 ├── requirements.txt
 └── README.md
 ```
@@ -142,23 +144,59 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Start the Server
+### 2. Run the Demo (Easy Mode)
 
+The easiest way to run the demos is using the consolidated demo runner, which automatically starts the server:
+
+```bash
+python run_demo.py
+```
+
+This will:
+- Automatically start the server in the background
+- Present you with a menu to choose which demo to run:
+  1. **Simple Educational Demo** - Interactive, step-by-step walkthrough with explanations
+  2. **Comprehensive Demo** - Automated demonstration of all scenarios
+  3. **Both Demos** - Run both in sequence
+  4. **Interactive Playground** - Experiment with different auth methods and tool calls
+- Clean up the server when done
+
+You can also run specific demos directly:
+
+```bash
+python run_demo.py --simple      # Run educational demo only
+python run_demo.py --full        # Run comprehensive demo only
+python run_demo.py --both        # Run both demos
+python run_demo.py --playground  # Run interactive playground mode
+```
+
+**Interactive Playground Mode:**
+
+The playground mode lets you experiment with the Universal Caller Adapter by:
+- Selecting different authentication methods (Cookie, OAuth, Slack, Anonymous)
+- Choosing which tool to call (whoami, rag-search, diagnostics)
+- Seeing the exact request details (headers, cookies, body)
+- Viewing real-time server responses
+- Understanding why requests succeed or fail based on auth strength and entitlements
+
+This is perfect for exploring authorization behaviors and understanding how different auth methods interact with tool policies.
+
+### 3. Manual Server Management (Alternative)
+
+If you prefer to manage the server manually:
+
+**Start the server:**
 ```bash
 python main.py
 ```
 
-Server runs at `http://localhost:8000`
-
-### 3. Run the Demo
-
-In a separate terminal:
-
+**Run demos** (in separate terminals):
 ```bash
-python demo.py
+python simple_demo.py    # Educational demo
+python demo.py           # Comprehensive demo
 ```
 
-The demo script will:
+The demo scripts will:
 1. Show each auth method resolving to a Principal
 2. Call tools via different entry points
 3. Demonstrate Slack being blocked from sensitive tools
@@ -329,4 +367,4 @@ async def invoke_my_tool(request: Request):
 
 ## License
 
-This is a POC for internal demonstration purposes.
+This project is open source and available for all users and implementations. Feel free to use, modify, and adapt this pattern for your own projects. Contributions and feedback are welcome!

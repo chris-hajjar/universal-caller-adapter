@@ -68,7 +68,8 @@ async def show_who_am_i(client: httpx.AsyncClient, headers: Dict[str, str], auth
     print_step(f"Checking who we are when using {auth_method}...")
 
     response = await client.get("http://localhost:8000/whoami", headers=headers)
-    principal = response.json()
+    data = response.json()
+    principal = data["principal"]  # Extract the nested principal object
 
     print_info("User ID", principal["principal_id"])
     print_info("Auth Method", principal["auth_method"])
@@ -380,7 +381,7 @@ We'll use Bob's cookie - Bob only has 'rag:read' permission (no diagnostics acce
 if __name__ == "__main__":
     print("\n" + Colors.BOLD + "=" * 80 + Colors.END)
     print(Colors.BOLD + "Starting Simple Demo - Make sure the server is running!".center(80) + Colors.END)
-    print(Colors.BOLD + "(Run: ./run_demo.sh or start main.py separately)".center(80) + Colors.END)
+    print(Colors.BOLD + "(Tip: Use 'python run_demo.py' for automatic server management)".center(80) + Colors.END)
     print(Colors.BOLD + "=" * 80 + Colors.END + "\n")
 
     try:
