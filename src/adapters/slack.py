@@ -5,7 +5,7 @@ import time
 from typing import Optional
 from fastapi import Request
 
-from src.models import Principal, AuthMethod, AuthStrength
+from src.models import Principal, AuthMethod, AUTH_STRENGTH_WEAK
 from .base import AuthAdapter
 
 
@@ -17,7 +17,7 @@ class SlackAdapter(AuthAdapter):
     - X-Slack-Request-Timestamp (prevent replay)
     - X-Slack-Signature (HMAC-SHA256)
 
-    Auth strength is WEAK because:
+    Auth strength is 1 (weak) because:
     - No user-level authentication (just app-level)
     - Shared secret model
     - Limited user identity verification
@@ -86,7 +86,7 @@ class SlackAdapter(AuthAdapter):
             return Principal(
                 principal_id=f"slack_unknown_{slack_user_id}",
                 auth_method=AuthMethod.SLACK,
-                auth_strength=AuthStrength.WEAK,
+                auth_strength=AUTH_STRENGTH_WEAK,
                 entitlements=set()
             )
 
@@ -94,6 +94,6 @@ class SlackAdapter(AuthAdapter):
             principal_id=user_data["principal_id"],
             tenant_id=user_data.get("tenant_id"),
             auth_method=AuthMethod.SLACK,
-            auth_strength=AuthStrength.WEAK,  # Always WEAK for Slack
+            auth_strength=AUTH_STRENGTH_WEAK,  # Always weak (1) for Slack
             entitlements=set(user_data.get("entitlements", []))
         )

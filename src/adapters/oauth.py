@@ -3,7 +3,7 @@ import jwt
 from typing import Optional
 from fastapi import Request
 
-from src.models import Principal, AuthMethod, AuthStrength
+from src.models import Principal, AuthMethod, AUTH_STRENGTH_STRONG
 from .base import AuthAdapter
 
 
@@ -69,7 +69,7 @@ class OAuthAdapter(AuthAdapter):
                 principal_id=principal_id,
                 tenant_id=tenant_id,
                 auth_method=AuthMethod.OAUTH,
-                auth_strength=AuthStrength.STRONG,
+                auth_strength=AUTH_STRENGTH_STRONG,
                 entitlements=set(entitlements)
             )
 

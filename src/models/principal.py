@@ -12,11 +12,11 @@ class AuthMethod(str, Enum):
     ANONYMOUS = "anonymous"
 
 
-class AuthStrength(str, Enum):
-    """Security level of the authentication."""
-    STRONG = "strong"
-    WEAK = "weak"
-    ANONYMOUS = "anonymous"
+# Numeric authentication strength levels
+# Higher numbers = stronger authentication
+AUTH_STRENGTH_ANONYMOUS = 0
+AUTH_STRENGTH_WEAK = 1
+AUTH_STRENGTH_STRONG = 2
 
 
 @dataclass
@@ -31,7 +31,7 @@ class Principal:
     principal_id: str
     tenant_id: Optional[str] = None
     auth_method: AuthMethod = AuthMethod.ANONYMOUS
-    auth_strength: AuthStrength = AuthStrength.ANONYMOUS
+    auth_strength: int = AUTH_STRENGTH_ANONYMOUS
     entitlements: Set[str] = field(default_factory=set)
 
     @property
@@ -42,7 +42,7 @@ class Principal:
     @property
     def is_strong_auth(self) -> bool:
         """Check if this principal has strong authentication."""
-        return self.auth_strength == AuthStrength.STRONG
+        return self.auth_strength == AUTH_STRENGTH_STRONG
 
     def has_entitlement(self, entitlement: str) -> bool:
         """Check if principal has a specific entitlement."""
@@ -54,6 +54,6 @@ class Principal:
         return cls(
             principal_id="anonymous",
             auth_method=AuthMethod.ANONYMOUS,
-            auth_strength=AuthStrength.ANONYMOUS,
+            auth_strength=AUTH_STRENGTH_ANONYMOUS,
             entitlements=set()
         )

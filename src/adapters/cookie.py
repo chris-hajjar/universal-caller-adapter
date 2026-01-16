@@ -2,7 +2,7 @@
 from typing import Optional
 from fastapi import Request
 
-from src.models import Principal, AuthMethod, AuthStrength
+from src.models import Principal, AuthMethod, AUTH_STRENGTH_STRONG
 from .base import AuthAdapter
 
 
@@ -56,6 +56,6 @@ class CookieAdapter(AuthAdapter):
             principal_id=user_data["principal_id"],
             tenant_id=user_data.get("tenant_id"),
             auth_method=AuthMethod.COOKIE,
-            auth_strength=AuthStrength.STRONG,
+            auth_strength=AUTH_STRENGTH_STRONG,
             entitlements=set(user_data.get("entitlements", []))
         )

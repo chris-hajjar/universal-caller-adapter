@@ -6,7 +6,7 @@ Demonstrates unified authentication/authorization across multiple entry points.
 from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
 
-from src.models import Principal, AuthStrength
+from src.models import Principal, AUTH_STRENGTH_WEAK, AUTH_STRENGTH_STRONG
 from src.adapters import CookieAdapter, OAuthAdapter, SlackAdapter
 from src.auth import Authorizer, ToolPolicy, AuthorizationError
 from src.middleware import AuthMiddleware
@@ -40,14 +40,14 @@ authorizer = Authorizer()
 authorizer.register_policy(ToolPolicy(
     tool_name="rag_search",
     required_entitlements={"rag:read"},
-    min_auth_strength=AuthStrength.WEAK,  # Slack can access this
+    min_auth_strength=AUTH_STRENGTH_WEAK,  # Slack can access this (strength >= 1)
     description="Search over RAG knowledge base"
 ))
 
 authorizer.register_policy(ToolPolicy(
     tool_name="diagnostics",
     required_entitlements={"diag:read"},
-    min_auth_strength=AuthStrength.STRONG,  # Requires strong auth (blocks Slack)
+    min_auth_strength=AUTH_STRENGTH_STRONG,  # Requires strong auth (strength >= 2, blocks Slack)
     description="System diagnostics - sensitive operation"
 ))
 
@@ -92,8 +92,8 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "/whoami": "Show current principal",
-            "/tools/rag-search": "Search RAG knowledge base (requires rag:read)",
-            "/tools/diagnostics": "System diagnostics (requires diag:read + strong auth)"
+            "/tools/rag-search": "Search RAG knowledge base (requires rag:read, auth strength >= 1)",
+            "/tools/diagnostics": "System diagnostics (requires diag:read + auth strength >= 2)"
         }
     }
 
@@ -121,7 +121,7 @@ async def invoke_rag_search(request: Request, body: RagSearchRequest):
 
     Authorization:
     - Requires: rag:read entitlement
-    - Min auth strength: WEAK (Slack can access)
+    - Min auth strength: 1 (weak - Slack can access)
     """
     principal = get_principal(request)
 
@@ -157,7 +157,7 @@ async def invoke_diagnostics(request: Request):
 
     Authorization:
     - Requires: diag:read entitlement
-    - Min auth strength: STRONG (blocks Slack)
+    - Min auth strength: 2 (strong - blocks Slack)
     """
     principal = get_principal(request)
 

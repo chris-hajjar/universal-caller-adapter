@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Set, Optional
 
-from src.models import Principal, AuthStrength
+from src.models import Principal, AUTH_STRENGTH_WEAK
 
 
 class AuthorizationError(Exception):
@@ -22,7 +22,7 @@ class ToolPolicy:
     """
     tool_name: str
     required_entitlements: Set[str]
-    min_auth_strength: AuthStrength = AuthStrength.WEAK
+    min_auth_strength: int = AUTH_STRENGTH_WEAK
     description: str = ""
 
 
@@ -70,8 +70,8 @@ class Authorizer:
         # Check authentication strength
         if not self._check_auth_strength(principal, policy.min_auth_strength):
             raise AuthorizationError(
-                f"Tool '{tool_name}' requires {policy.min_auth_strength.value} authentication, "
-                f"but caller has {principal.auth_strength.value}",
+                f"Tool '{tool_name}' requires auth strength {policy.min_auth_strength}, "
+                f"but caller has {principal.auth_strength}",
                 reason="insufficient_auth_strength"
             )
 
@@ -84,18 +84,9 @@ class Authorizer:
                 reason="missing_entitlements"
             )
 
-    def _check_auth_strength(self, principal: Principal, min_strength: AuthStrength) -> bool:
+    def _check_auth_strength(self, principal: Principal, min_strength: int) -> bool:
         """Check if principal meets minimum auth strength requirement."""
-        strength_order = {
-            AuthStrength.ANONYMOUS: 0,
-            AuthStrength.WEAK: 1,
-            AuthStrength.STRONG: 2
-        }
-
-        principal_level = strength_order[principal.auth_strength]
-        required_level = strength_order[min_strength]
-
-        return principal_level >= required_level
+        return principal.auth_strength >= min_strength
 
     def can_access(self, principal: Principal, tool_name: str) -> bool:
         """

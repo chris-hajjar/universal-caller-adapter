@@ -88,7 +88,7 @@ class Principal:
     principal_id: str
     tenant_id: Optional[str]
     auth_method: AuthMethod  # cookie | oauth | slack | anonymous
-    auth_strength: AuthStrength  # strong | weak | anonymous
+    auth_strength: int  # 0 = anonymous, 1 = weak, 2 = strong
     entitlements: Set[str]
 ```
 
@@ -96,10 +96,10 @@ class Principal:
 
 Each adapter normalizes a different entry point to a Principal:
 
-- **CookieAdapter**: Platform session cookies → Principal (STRONG)
-- **OAuthAdapter**: JWT tokens → Principal (STRONG)
-- **SlackAdapter**: Slack signatures → Principal (WEAK)
-- **Fallback**: No auth → Anonymous Principal
+- **CookieAdapter**: Platform session cookies → Principal (strength = 2)
+- **OAuthAdapter**: JWT tokens → Principal (strength = 2)
+- **SlackAdapter**: Slack signatures → Principal (strength = 1)
+- **Fallback**: No auth → Anonymous Principal (strength = 0)
 
 ### 3. Centralized Authorization
 
@@ -119,7 +119,7 @@ Tool policies define requirements:
 ToolPolicy(
     tool_name="diagnostics",
     required_entitlements={"diag:read"},
-    min_auth_strength=AuthStrength.STRONG  # Blocks Slack
+    min_auth_strength=2  # Requires strong auth (blocks Slack which is 1)
 )
 ```
 
@@ -259,8 +259,8 @@ The demo validates:
 - Authorization logic is identical regardless of entry point
 
 ### ✅ Scenario 3: Auth strength enforcement
-- `rag_search`: Allows WEAK auth (Slack ✓)
-- `diagnostics`: Requires STRONG auth (Slack ✗)
+- `rag_search`: Allows auth strength >= 1 (Slack ✓)
+- `diagnostics`: Requires auth strength >= 2 (Slack ✗)
 
 ### ✅ Scenario 4: Entitlement enforcement
 - Users without `diag:read` blocked from diagnostics
@@ -289,12 +289,12 @@ Show the resolved Principal for the current request.
 ### `POST /tools/rag-search`
 Search RAG knowledge base.
 - **Requires**: `rag:read` entitlement
-- **Min auth**: WEAK (Slack allowed)
+- **Min auth strength**: 1 (Slack allowed)
 
 ### `POST /tools/diagnostics`
 System diagnostics.
 - **Requires**: `diag:read` entitlement
-- **Min auth**: STRONG (Slack blocked)
+- **Min auth strength**: 2 (Slack blocked)
 
 ## Extending the POC
 
@@ -339,7 +339,7 @@ async def my_tool(principal: Principal, ...) -> Dict[str, Any]:
 authorizer.register_policy(ToolPolicy(
     tool_name="my_tool",
     required_entitlements={"my:permission"},
-    min_auth_strength=AuthStrength.STRONG
+    min_auth_strength=2  # Require strong auth
 ))
 ```
 
@@ -360,7 +360,7 @@ While this POC demonstrates a unified authentication architecture, several desig
 
 1. **Entitlements & Policy Model**: String-based entitlements (`{"rag:read"}`) lack hierarchy, resource-level scoping, and conditional logic. Real systems need policy-as-code with tenant-scoped permissions, temporal constraints, and the ability to express "read docs in tenant A, write docs in tenant B" without code changes.
 
-2. **Auth Strength Model**: The three-tier strength model (ANONYMOUS/WEAK/STRONG) oversimplifies authentication quality. Production systems need to distinguish password-only from MFA-backed sessions, support step-up authentication for sensitive operations, and handle certificate-based auth which is stronger than password-based OAuth but currently both would be "STRONG".
+2. **Auth Strength Model**: The numeric strength model (0=anonymous, 1=weak, 2=strong) is a starting point but production systems need more granularity. Real deployments need to distinguish password-only from MFA-backed sessions, support step-up authentication for sensitive operations, and handle certificate-based auth which is stronger than password-based OAuth. Consider extending to a 0-10 scale or adding auth quality metadata beyond a single number.
 
 3. **Multi-Tenancy Isolation**: While `tenant_id` exists in the Principal model, it's not validated during authorization checks. Wide-scale deployments need architectural patterns for enforcing tenant boundaries at the authorization layer to prevent cross-tenant access even when entitlements match.
 

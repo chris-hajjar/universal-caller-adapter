@@ -151,7 +151,7 @@ The website gave you a session cookie. Let's use that cookie to make requests.
         cookie_headers = {"Cookie": "session_id=sess_alice_123"}
         alice = await show_who_am_i(client, cookie_headers, "Cookie")
 
-        print("Notice we became user 'user_alice' with STRONG authentication.")
+        print("Notice we became user 'user_alice' with auth strength 2 (strong).")
         print("Alice has several permissions: rag:read, rag:write, diag:read")
         print()
 
@@ -174,7 +174,7 @@ The website gave you a session cookie. Let's use that cookie to make requests.
             "System Diagnostics",
             "/tools/diagnostics",
             {},
-            "Alice has 'diag:read' AND strong authentication, so this should work"
+            "Alice has 'diag:read' AND auth strength 2 (strong), so this should work"
         )
 
         input(f"{Colors.BOLD}Press ENTER for next scenario...{Colors.END}")
@@ -204,7 +204,7 @@ authentication method, we still become a Principal on the other side!
         oauth_headers = {"Authorization": f"Bearer {token}"}
         admin = await show_who_am_i(client, oauth_headers, "OAuth Token")
 
-        print("Notice we became 'oauth_user_admin' with STRONG authentication.")
+        print("Notice we became 'oauth_user_admin' with auth strength 2 (strong).")
         print("This admin has MORE permissions: rag:read, rag:write, diag:read, diag:write")
         print()
 
@@ -227,7 +227,7 @@ authentication method, we still become a Principal on the other side!
             "System Diagnostics",
             "/tools/diagnostics",
             {},
-            "Admin has 'diag:read' AND strong authentication, so this should work"
+            "Admin has 'diag:read' AND auth strength 2 (strong), so this should work"
         )
 
         input(f"{Colors.BOLD}Press ENTER for next scenario...{Colors.END}")
@@ -240,12 +240,12 @@ authentication method, we still become a Principal on the other side!
         print("""
 Now let's use Slack authentication. This is when a Slack bot calls your API.
 
-Here's something important: Slack authentication is considered WEAKER because:
+Here's something important: Slack authentication has strength 1 (weak) because:
 - It's just a shared secret between you and Slack
 - It verifies the REQUEST came from Slack, but not which PERSON in Slack
-- It's less secure than a proper login
+- It's less secure than a proper login (strength 2)
 
-Because of this, we give Slack users WEAKER permissions.
+Because of this, sensitive operations require higher auth strength.
         """)
 
         slack_headers = {
@@ -258,35 +258,35 @@ Because of this, we give Slack users WEAKER permissions.
         # In the real system, this comes from the request body
         charlie = await show_who_am_i(client, slack_headers, "Slack Bot")
 
-        print("Notice we became a Slack user with WEAK authentication.")
+        print("Notice we became a Slack user with auth strength 1 (weak).")
         print("Slack users only get 'rag:read' permission.")
         print()
 
         input(f"{Colors.BOLD}Press ENTER to continue...{Colors.END}")
 
-        # Try accessing RAG search (should work - Slack user has rag:read, and RAG allows WEAK auth)
+        # Try accessing RAG search (should work - Slack user has rag:read, and RAG allows auth strength 1)
         await try_tool_access(
             client,
             slack_headers,
             "RAG Search",
             "/tools/rag-search",
             {"query": "What can Slack bots do?", "user_id": "U01ABC123"},
-            "Slack user has 'rag:read' AND RAG Search allows WEAK auth, so this should work"
+            "Slack user has 'rag:read' AND RAG Search allows auth strength >= 1, so this should work"
         )
 
-        # Try accessing diagnostics (should FAIL - Slack is WEAK auth, but diagnostics requires STRONG)
+        # Try accessing diagnostics (should FAIL - Slack is auth strength 1, but diagnostics requires 2)
         await try_tool_access(
             client,
             slack_headers,
             "System Diagnostics",
             "/tools/diagnostics",
             {},
-            "Slack user has 'diag:read' BUT Slack is WEAK auth. Diagnostics requires STRONG auth, so this should FAIL"
+            "Slack user has 'diag:read' BUT auth strength 1. Diagnostics requires strength >= 2, so this should FAIL"
         )
 
         print(f"{Colors.BOLD}☝️  This is the key security feature!{Colors.END}")
         print("Even though the Slack user has the right permission (diag:read),")
-        print("they can't access sensitive diagnostics because Slack auth is WEAK.")
+        print("they can't access sensitive diagnostics because Slack auth is only strength 1.")
         print("This protects sensitive operations from less-secure auth methods.")
         print()
 
@@ -305,7 +305,7 @@ We'll use Bob's cookie - Bob only has 'rag:read' permission (no diagnostics acce
         bob_headers = {"Cookie": "session_id=sess_bob_456"}
         bob = await show_who_am_i(client, bob_headers, "Cookie (Bob)")
 
-        print("Bob has STRONG authentication (cookie login), but LIMITED permissions.")
+        print("Bob has auth strength 2 (strong via cookie login), but LIMITED permissions.")
         print("Bob only has: rag:read")
         print()
 
@@ -332,7 +332,7 @@ We'll use Bob's cookie - Bob only has 'rag:read' permission (no diagnostics acce
         )
 
         print(f"{Colors.BOLD}☝️  Another key security feature!{Colors.END}")
-        print("Bob has STRONG authentication, but he still can't access diagnostics")
+        print("Bob has auth strength 2 (strong), but he still can't access diagnostics")
         print("because he doesn't have the 'diag:read' permission.")
         print("Both auth strength AND permissions must be satisfied.")
         print()
@@ -353,9 +353,10 @@ We'll use Bob's cookie - Bob only has 'rag:read' permission (no diagnostics acce
    - They just check: "Does this Principal have permission?"
 
 2. {Colors.GREEN}AUTH STRENGTH LEVELS{Colors.END}
-   - STRONG auth (Cookie, OAuth): Proper user login
-   - WEAK auth (Slack): Less secure, shared-secret based
-   - Sensitive operations can require STRONG auth only
+   - Auth strength 2 (Cookie, OAuth): Strong - proper user login
+   - Auth strength 1 (Slack): Weak - less secure, shared-secret based
+   - Auth strength 0: Anonymous - no authentication
+   - Sensitive operations can require higher auth strength (e.g., >= 2)
 
 3. {Colors.GREEN}PERMISSION CHECKING{Colors.END}
    - Each tool specifies what permissions it needs (e.g., 'rag:read')
