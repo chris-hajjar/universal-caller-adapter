@@ -367,4 +367,4 @@ async def invoke_my_tool(request: Request):
 
 ## License
 
-This is a POC for internal demonstration purposes.
+This project is open source and available for all users and implementations. Feel free to use, modify, and adapt this pattern for your own projects. Contributions and feedback are welcome!
