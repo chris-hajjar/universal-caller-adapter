@@ -203,8 +203,9 @@ async def demo():
 
 if __name__ == "__main__":
     print()
-    print("Starting demo...")
-    print("Make sure the server is running: python main.py")
+    print("Starting comprehensive demo...")
+    print("Note: Use 'python run_demo.py' for automatic server management")
+    print("      or make sure the server is running: python main.py")
     print()
     input("Press Enter when server is ready...")
     print()

@@ -69,7 +69,9 @@ universal-caller-adapter/
 │       ├── rag_search.py         # Sample tool: RAG search
 │       └── diagnostics.py        # Sample tool: diagnostics
 ├── main.py                        # FastAPI application
-├── demo.py                        # Demo script
+├── run_demo.py                    # Consolidated demo runner (starts server automatically)
+├── simple_demo.py                 # Educational demo with explanations
+├── demo.py                        # Comprehensive demo script
 ├── requirements.txt
 └── README.md
 ```
@@ -142,23 +144,46 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Start the Server
+### 2. Run the Demo (Easy Mode)
 
+The easiest way to run the demos is using the consolidated demo runner, which automatically starts the server:
+
+```bash
+python run_demo.py
+```
+
+This will:
+- Automatically start the server in the background
+- Present you with a menu to choose which demo to run:
+  1. **Simple Educational Demo** - Interactive, step-by-step walkthrough with explanations
+  2. **Comprehensive Demo** - Automated demonstration of all scenarios
+  3. **Both Demos** - Run both in sequence
+- Clean up the server when done
+
+You can also run specific demos directly:
+
+```bash
+python run_demo.py --simple    # Run educational demo only
+python run_demo.py --full      # Run comprehensive demo only
+python run_demo.py --both      # Run both demos
+```
+
+### 3. Manual Server Management (Alternative)
+
+If you prefer to manage the server manually:
+
+**Start the server:**
 ```bash
 python main.py
 ```
 
-Server runs at `http://localhost:8000`
-
-### 3. Run the Demo
-
-In a separate terminal:
-
+**Run demos** (in separate terminals):
 ```bash
-python demo.py
+python simple_demo.py    # Educational demo
+python demo.py           # Comprehensive demo
 ```
 
-The demo script will:
+The demo scripts will:
 1. Show each auth method resolving to a Principal
 2. Call tools via different entry points
 3. Demonstrate Slack being blocked from sensitive tools
