@@ -158,15 +158,28 @@ This will:
   1. **Simple Educational Demo** - Interactive, step-by-step walkthrough with explanations
   2. **Comprehensive Demo** - Automated demonstration of all scenarios
   3. **Both Demos** - Run both in sequence
+  4. **Interactive Playground** - Experiment with different auth methods and tool calls
 - Clean up the server when done
 
 You can also run specific demos directly:
 
 ```bash
-python run_demo.py --simple    # Run educational demo only
-python run_demo.py --full      # Run comprehensive demo only
-python run_demo.py --both      # Run both demos
+python run_demo.py --simple      # Run educational demo only
+python run_demo.py --full        # Run comprehensive demo only
+python run_demo.py --both        # Run both demos
+python run_demo.py --playground  # Run interactive playground mode
 ```
+
+**Interactive Playground Mode:**
+
+The playground mode lets you experiment with the Universal Caller Adapter by:
+- Selecting different authentication methods (Cookie, OAuth, Slack, Anonymous)
+- Choosing which tool to call (whoami, rag-search, diagnostics)
+- Seeing the exact request details (headers, cookies, body)
+- Viewing real-time server responses
+- Understanding why requests succeed or fail based on auth strength and entitlements
+
+This is perfect for exploring authorization behaviors and understanding how different auth methods interact with tool policies.
 
 ### 3. Manual Server Management (Alternative)
 
