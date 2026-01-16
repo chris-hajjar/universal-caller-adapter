@@ -354,6 +354,18 @@ async def invoke_my_tool(request: Request):
     return ToolResponse(success=True, data=result)
 ```
 
+## Open Challenges for Wide-Scale Adoption
+
+While this POC demonstrates a unified authentication architecture, several design challenges require deeper consideration for production deployment at scale:
+
+1. **Entitlements & Policy Model**: String-based entitlements (`{"rag:read"}`) lack hierarchy, resource-level scoping, and conditional logic. Real systems need policy-as-code with tenant-scoped permissions, temporal constraints, and the ability to express "read docs in tenant A, write docs in tenant B" without code changes.
+
+2. **Auth Strength Model**: The three-tier strength model (ANONYMOUS/WEAK/STRONG) oversimplifies authentication quality. Production systems need to distinguish password-only from MFA-backed sessions, support step-up authentication for sensitive operations, and handle certificate-based auth which is stronger than password-based OAuth but currently both would be "STRONG".
+
+3. **Multi-Tenancy Isolation**: While `tenant_id` exists in the Principal model, it's not validated during authorization checks. Wide-scale deployments need architectural patterns for enforcing tenant boundaries at the authorization layer to prevent cross-tenant access even when entitlements match.
+
+4. **Token Lifecycle & Distributed State**: Missing refresh, revocation, and session timeout capabilities create architectural questions about distributed state management. How should token blacklists work across multiple instances? How to handle cache invalidation when policies change? These require distributed systems design decisions beyond simple implementation.
+
 ## Non-Goals (Out of Scope for POC)
 
 - Production-grade IAM
