@@ -68,7 +68,8 @@ async def show_who_am_i(client: httpx.AsyncClient, headers: Dict[str, str], auth
     print_step(f"Checking who we are when using {auth_method}...")
 
     response = await client.get("http://localhost:8000/whoami", headers=headers)
-    principal = response.json()
+    data = response.json()
+    principal = data["principal"]  # Extract the nested principal object
 
     print_info("User ID", principal["principal_id"])
     print_info("Auth Method", principal["auth_method"])
