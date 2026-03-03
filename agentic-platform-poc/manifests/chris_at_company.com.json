@@ -1,0 +1,21 @@
+{
+  "user_id": "chris@company.com",
+  "role": "owner",
+  "mcp_servers": {
+    "mariadb": {
+      "enabled": true,
+      "scope": "read_write",
+      "tables": ["invoices", "orders", "users", "products", "reports"]
+    },
+    "memory": {
+      "enabled": true,
+      "scope": "personal_only"
+    },
+    "slack_mcp": {
+      "enabled": true
+    },
+    "reports": {
+      "enabled": true
+    }
+  }
+}
