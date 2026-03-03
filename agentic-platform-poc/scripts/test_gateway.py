@@ -125,6 +125,74 @@ def main():
         else:
             failed += 1
 
+    # --- Memory tools (explicit store/search/delete) ---
+    print("\n--- Memory Tools (Chris) ---")
+
+    # Store a memory
+    if test("Store memory", "POST", "/memory/store",
+            token_chris, {"content": "my name is Heisenberg"}, 200):
+        passed += 1
+        # Retrieve the stored memory ID for cleanup
+        resp = httpx.post(
+            f"{GATEWAY_URL}/memory/store",
+            json={"content": "test memory for deletion"},
+            headers={"Authorization": f"Bearer {token_chris}"},
+            timeout=10.0,
+        )
+        if resp.status_code == 200:
+            test_memory_id = resp.json().get("memory", {}).get("id", "")
+        else:
+            test_memory_id = ""
+    else:
+        failed += 1
+        test_memory_id = ""
+
+    # Search for the stored memory
+    if test("Search memory (Heisenberg)", "POST", "/memory/search",
+            token_chris, {"query": "what is my name", "limit": 3}, 200):
+        passed += 1
+    else:
+        failed += 1
+
+    # Delete a memory
+    if test_memory_id:
+        if test("Delete memory", "POST", "/memory/delete",
+                token_chris, {"memory_id": test_memory_id}, 200):
+            passed += 1
+        else:
+            failed += 1
+    else:
+        print("  [SKIP] Delete memory — no memory ID from store step")
+
+    # Store without content (should fail)
+    if test("Store memory (empty — DENIED)", "POST", "/memory/store",
+            token_chris, {"content": ""}, 400):
+        passed += 1
+    else:
+        failed += 1
+
+    # --- Memory tools (User B — should have access) ---
+    print("\n--- Memory Tools (User B) ---")
+    if test("Store memory (allowed)", "POST", "/memory/store",
+            token_b, {"content": "User B test memory"}, 200):
+        passed += 1
+    else:
+        failed += 1
+
+    # --- Admin memory endpoints ---
+    print("\n--- Admin Memory Endpoints ---")
+    if test("Admin: list user memories", "GET", f"/admin/memories/chris@company.com",
+            token_chris, None, 200):
+        passed += 1
+    else:
+        failed += 1
+
+    if test("Admin: list memories (DENIED for non-owner)", "GET",
+            f"/admin/memories/chris@company.com", token_a, None, 403):
+        passed += 1
+    else:
+        failed += 1
+
     # --- Summary ---
     print(f"\n{'=' * 60}")
     print(f"Results: {passed} passed, {failed} failed, {passed + failed} total")

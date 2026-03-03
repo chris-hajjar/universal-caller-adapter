@@ -9,6 +9,7 @@ Routes all AI client requests through:
 """
 
 import os
+import json
 import logging
 from contextlib import asynccontextmanager
 
@@ -98,6 +99,16 @@ async def mcp_proxy(
         if server_name == "mariadb":
             engine.enforce_mariadb(action, body)
 
+    # --- Pre-fetch relevant memories (inject context before agent runs) ---
+    if engine.can_access_server("memory"):
+        try:
+            search_text = json.dumps(body, default=str)[:200]
+            memories = await memory_middleware.search(user.user_id, search_text, limit=3)
+            if memories:
+                body["_memory_context"] = memories
+        except Exception:
+            logger.debug("Memory pre-fetch skipped (non-fatal)")
+
     # --- Route to MCP server ---
     result = await mcp_router.route(server_name, action, body, user)
 
@@ -140,6 +151,62 @@ async def memory_search(
         limit=limit,
     )
     return {"status": "ok", "results": results}
+
+
+# ---------------------------------------------------------------------------
+# Memory store — explicit agent-callable memory creation
+# ---------------------------------------------------------------------------
+
+@app.post("/memory/store")
+async def memory_store(
+    request: Request,
+    user: UserToken = Depends(get_current_user),
+):
+    """Store an explicit memory for the user (agent-callable tool)."""
+    body = await request.json()
+    content = body.get("content", "")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+
+    manifest = await load_manifest_for_user(user.user_id)
+    engine = PermissionEngine(manifest)
+
+    if not engine.is_owner() and not engine.can_access_server("memory"):
+        raise HTTPException(status_code=403, detail="Memory access not enabled")
+
+    result = await memory_middleware.store(user_id=user.user_id, content=content)
+    if result:
+        return {"status": "ok", "memory": result}
+    raise HTTPException(status_code=500, detail="Failed to store memory")
+
+
+# ---------------------------------------------------------------------------
+# Memory delete — remove a specific memory
+# ---------------------------------------------------------------------------
+
+@app.post("/memory/delete")
+async def memory_delete(
+    request: Request,
+    user: UserToken = Depends(get_current_user),
+):
+    """Delete a specific memory by ID."""
+    body = await request.json()
+    memory_id = body.get("memory_id", "")
+
+    if not memory_id:
+        raise HTTPException(status_code=400, detail="memory_id is required")
+
+    manifest = await load_manifest_for_user(user.user_id)
+    engine = PermissionEngine(manifest)
+
+    if not engine.is_owner() and not engine.can_access_server("memory"):
+        raise HTTPException(status_code=403, detail="Memory access not enabled")
+
+    deleted = await memory_middleware.delete(user_id=user.user_id, memory_id=memory_id)
+    if deleted:
+        return {"status": "ok", "deleted": memory_id}
+    raise HTTPException(status_code=404, detail="Memory not found or delete failed")
 
 
 # ---------------------------------------------------------------------------
@@ -193,3 +260,44 @@ async def list_users(
     okta = OktaClient()
     users = await okta.list_users()
     return {"status": "ok", "users": users}
+
+
+# ---------------------------------------------------------------------------
+# Admin: memory viewer (owner only)
+# ---------------------------------------------------------------------------
+
+@app.get("/admin/memories/{target_user_id}")
+async def list_user_memories(
+    target_user_id: str,
+    user: UserToken = Depends(get_current_user),
+):
+    """Owner-only: list a user's stored memories."""
+    owner_manifest = await load_manifest_for_user(user.user_id)
+    if not PermissionEngine(owner_manifest).is_owner():
+        raise HTTPException(status_code=403, detail="Owner access required")
+
+    memories = await memory_middleware.list_memories(target_user_id, limit=50)
+    return {"status": "ok", "user_id": target_user_id, "memories": memories}
+
+
+@app.post("/admin/memories/{target_user_id}/delete")
+async def admin_delete_memory(
+    target_user_id: str,
+    request: Request,
+    user: UserToken = Depends(get_current_user),
+):
+    """Owner-only: delete a specific memory for a user."""
+    owner_manifest = await load_manifest_for_user(user.user_id)
+    if not PermissionEngine(owner_manifest).is_owner():
+        raise HTTPException(status_code=403, detail="Owner access required")
+
+    body = await request.json()
+    memory_id = body.get("memory_id", "")
+
+    if not memory_id:
+        raise HTTPException(status_code=400, detail="memory_id is required")
+
+    deleted = await memory_middleware.delete(user_id=target_user_id, memory_id=memory_id)
+    if deleted:
+        return {"status": "ok", "deleted": memory_id}
+    raise HTTPException(status_code=404, detail="Memory not found or delete failed")

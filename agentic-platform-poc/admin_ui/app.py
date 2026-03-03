@@ -99,6 +99,35 @@ def _save_manifest(user_email: str, manifest: dict):
         st.error("Cannot connect to gateway.")
 
 
+def _fetch_memories(user_email: str) -> list[dict]:
+    """Fetch stored memories for a user."""
+    try:
+        resp = httpx.get(
+            f"{GATEWAY_URL}/admin/memories/{user_email}",
+            headers=_gateway_headers(),
+            timeout=10.0,
+        )
+        if resp.status_code == 200:
+            return resp.json().get("memories", [])
+    except httpx.ConnectError:
+        pass
+    return []
+
+
+def _delete_memory(user_email: str, memory_id: str) -> bool:
+    """Delete a specific memory via the gateway."""
+    try:
+        resp = httpx.post(
+            f"{GATEWAY_URL}/admin/memories/{user_email}/delete",
+            json={"memory_id": memory_id},
+            headers=_gateway_headers(),
+            timeout=10.0,
+        )
+        return resp.status_code == 200
+    except httpx.ConnectError:
+        return False
+
+
 def main():
     st.set_page_config(page_title="Agentic Platform Admin", layout="wide")
     st.title("Agentic Platform — Admin UI")
@@ -230,6 +259,41 @@ def main():
         "mcp_servers": updated_servers,
     }
     st.json(preview_manifest)
+
+    # -----------------------------------------------------------------------
+    # Section 4 — Memory Viewer
+    # -----------------------------------------------------------------------
+    st.header(f"Stored Memories — {user_names.get(selected_email, selected_email)}")
+    st.caption("View and manage stored conversation memories for this user.")
+
+    memories = _fetch_memories(selected_email)
+
+    if not memories:
+        st.info("No memories stored for this user yet.")
+    else:
+        st.markdown(f"**{len(memories)}** memories found")
+
+        for mem in memories:
+            mem_id = mem.get("id", "")
+            content = mem.get("content", "")
+            created = mem.get("created_at", "")
+
+            with st.container():
+                col_content, col_action = st.columns([5, 1])
+
+                with col_content:
+                    st.markdown(f"**{created[:19] if created else 'unknown'}**")
+                    st.text(content[:300] + ("..." if len(content) > 300 else ""))
+
+                with col_action:
+                    if st.button("Delete", key=f"del_{mem_id}"):
+                        if _delete_memory(selected_email, mem_id):
+                            st.success("Deleted")
+                            st.rerun()
+                        else:
+                            st.error("Failed to delete")
+
+                st.markdown("---")
 
 
 if __name__ == "__main__":

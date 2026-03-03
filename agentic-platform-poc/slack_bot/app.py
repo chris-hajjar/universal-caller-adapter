@@ -69,6 +69,11 @@ def _parse_intent(text: str) -> tuple[str, str, dict]:
     if match:
         return "memory", "store", {"content": match.group(1)}
 
+    # Memory delete
+    match = re.match(r"forget ([a-f0-9-]+)", text_lower)
+    if match:
+        return "memory", "delete", {"memory_id": match.group(1)}
+
     # SQL query - direct
     match = re.match(r"sql (.+)", text_lower, re.DOTALL)
     if match:
@@ -137,9 +142,15 @@ def _process_message(client, say, user_id: str, text: str, thread_ts: str):
         token = f"dev:{email}"
 
     try:
+        # Memory store/search/delete use dedicated endpoints, not the MCP proxy
+        if server_name == "memory":
+            url = f"{GATEWAY_URL}/memory/{action}"
+        else:
+            url = f"{GATEWAY_URL}/mcp/{server_name}/{action}"
+
         with httpx.Client(timeout=30.0) as http:
             resp = http.post(
-                f"{GATEWAY_URL}/mcp/{server_name}/{action}",
+                url,
                 json=body,
                 headers={"Authorization": f"Bearer {token}"},
             )

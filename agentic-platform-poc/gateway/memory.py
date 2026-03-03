@@ -113,13 +113,13 @@ class MemoryMiddleware:
         data = resp.json()
         return data["data"][0]["embedding"]
 
-    async def _store(self, user_id: str, content: str, embedding: list[float]):
+    async def _store(self, user_id: str, content: str, embedding: list[float], memory_id: str | None = None):
         """Write memory row to Supabase pgvector."""
         if not self._supabase_client:
             return
 
         row = {
-            "id": str(uuid.uuid4()),
+            "id": memory_id or str(uuid.uuid4()),
             "user_id": user_id,
             "content": content,
             "embedding": embedding,
@@ -131,6 +131,62 @@ class MemoryMiddleware:
             json=row,
         )
         resp.raise_for_status()
+
+    async def store(self, user_id: str, content: str) -> dict | None:
+        """
+        Explicitly store a memory (agent-callable).
+
+        Unlike sync_exchange which fires implicitly, this lets the agent
+        choose to remember something: "my name is Heisenberg".
+        """
+        try:
+            embedding = await self._embed(content)
+            if embedding:
+                memory_id = str(uuid.uuid4())
+                await self._store(user_id, content, embedding, memory_id=memory_id)
+                logger.info("Explicit memory stored for user %s", user_id)
+                return {"id": memory_id, "content": content}
+        except Exception:
+            logger.exception("Explicit memory store failed for user %s", user_id)
+        return None
+
+    async def delete(self, user_id: str, memory_id: str) -> bool:
+        """Delete a specific memory by ID (scoped to user)."""
+        if not self._supabase_client:
+            return False
+
+        try:
+            resp = await self._supabase_client.delete(
+                "/rest/v1/memories",
+                params={"id": f"eq.{memory_id}", "user_id": f"eq.{user_id}"},
+            )
+            resp.raise_for_status()
+            logger.info("Memory %s deleted for user %s", memory_id, user_id)
+            return True
+        except Exception:
+            logger.exception("Memory delete failed for user %s", user_id)
+            return False
+
+    async def list_memories(self, user_id: str, limit: int = 50) -> list[dict]:
+        """List recent memories for a user (for admin UI)."""
+        if not self._supabase_client:
+            return []
+
+        try:
+            resp = await self._supabase_client.get(
+                "/rest/v1/memories",
+                params={
+                    "user_id": f"eq.{user_id}",
+                    "select": "id,user_id,content,created_at",
+                    "order": "created_at.desc",
+                    "limit": str(limit),
+                },
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except Exception:
+            logger.exception("Memory list failed for user %s", user_id)
+            return []
 
     async def search(
         self,
