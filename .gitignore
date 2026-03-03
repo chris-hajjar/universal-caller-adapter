@@ -13,3 +13,21 @@ ENV/
 htmlcov/
 dist/
 build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+.mcp_proxy.log
+
+# Claude Desktop backup
+claude_desktop_config.json.backup
