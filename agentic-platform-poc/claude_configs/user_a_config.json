@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "agentic-gateway-mariadb": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://localhost:8000/mcp/mariadb",
+        "--header",
+        "Authorization: Bearer dev:user_a@company.com"
+      ]
+    },
+    "agentic-gateway-memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://localhost:8000/mcp/memory",
+        "--header",
+        "Authorization: Bearer dev:user_a@company.com"
+      ]
+    }
+  }
+}

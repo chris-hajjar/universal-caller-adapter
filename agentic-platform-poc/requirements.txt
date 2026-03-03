@@ -1,0 +1,18 @@
+# Gateway
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-jose[cryptography]>=3.3.0
+httpx>=0.25.0
+
+# Database
+mariadb>=1.1.0
+
+# Slack Bot
+slack-bolt>=1.18.0
+slack-sdk>=3.23.0
+
+# Admin UI
+streamlit>=1.29.0
+
+# Env loading
+python-dotenv>=1.0.0
